@@ -8,10 +8,10 @@
 	
 # }
 
-cd "$HOME/Downloads/testcmd" || exit
+cd "$HOME/Downloads/test/testcmd" || exit
 #pwd
 
-commonpasswords=("cs.rin.ru" )
+commonpasswords=("cs.rin.ru" "hello")
 ziptypes="zip,rar,7z,gzip,tar.gz,tgz,tar.bz2,tbz,tar.xz,txz,cbr"
 #ziptypes="zip,rar,7z"
 IFS=',' read -r -a ziparr <<< "$ziptypes"
@@ -35,15 +35,43 @@ tmp=".tmp"
 #make dir if it does not exist
 if [ ! -d "$tmp" ]; then
 	mkdir $tmp
-	echo "$DIRECTORY does not exist."
 fi
 
 for ((i = 0 ; i < ${#filesarr[@]} ; i++));do
 	path=${tmp}
 	conend=false
 	echo "${filesarr[i]}"
-	7z x -y "${filesarr[i]}" -o${tmp} > nul
-	#still have to check for errors when extracting archive
+
+	#error checking
+	x="$(7z t -p "${filesarr[i]}" 2>&1 >/dev/null)"
+	y="$?"
+	echo "error code $?"
+
+	if [ "$y" == 0 ]; then
+		echo "ok"
+		#OK to extract, no archive error or password
+		7z x -y "${filesarr[i]}" -o${tmp} 2>/dev/null	
+
+	elif [ "$y" == 2 ]; then
+		echo "no"
+		if [[ "$x" == *"Wrong password"* ]]; then
+			#password protected
+			for ((j = 0; j < ${#commonpasswords[@]} ; j++)); do
+				echo "j: $j"
+				if [ "$(7z t -p"${commonpasswords[j]}" "${filesarr[i]}" > NUL: 2>&1)" ]; then
+					7z x -y -p"${commonpasswords[j]}" "${filesarr[i]}" -o${tmp} 2>/dev/null	
+				fi
+			done
+		else
+			echo "Corrupted Archive, skipping"
+			continue
+		fi
+	else
+		echo "rare error: $?"
+		continue
+	fi
+
+	#archive extracted
 
 	#first basic check for common zip archives
 	#repeat until theres no more directories
