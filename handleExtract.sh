@@ -24,23 +24,16 @@ done
 
 cmd=${cmd::-4}
 cmd+=" \)"
-#echo $cmd
-#exec $cmd
-#cmd="find \. -type f \( -iname \*.zip -o -iname \*.rar \)"
+
 x=$(eval "$cmd")
-#echo "${x}"
 
-set -o noglob         # See special Note, below.
+
+set -o noglob       
 IFS=$'\n' filesarr=($x)
-set +o noglob         # See special Note, below.
+set +o noglob         
 
-#IFS=$'\n' read -r -a filesarr <<< "$x"
-#echo "array count: ${#filesarr[@]}"
-
-#printf '%s\n' "${filesarr[@]}"
-
-tmp=".tmp"
 #make dir if it does not exist
+tmp=".tmp"
 if [ ! -d "$tmp" ]; then
 	mkdir $tmp
 fi
@@ -55,7 +48,7 @@ for ((i = 0 ; i < ${#filesarr[@]} ; i++));do
 	#error checking
 	x="$(7z -bso0 -bsp0 -p t "${filesarr[i]}" 2>&1)"
 	y="$?"
-	echo "error code $y"
+	#echo "error code $y"
 
 	if [ "$y" == 0 ]; then
 		#echo "ok"
@@ -66,13 +59,17 @@ for ((i = 0 ; i < ${#filesarr[@]} ; i++));do
 		echo "$x"
 		if [[ "$x" =~ "Wrong password?" ]]; then
 			#password protected
-			for ((j = 0; j < ${#commonpasswords[@]} ; j++)); do
-				#echo "j: ${commonpasswords[j]}"
-				if [ "$(7z -bso0 -p"${commonpasswords[j]}" t "${filesarr[i]}")" ]; then
-					7z -bso0 -y -p"${commonpasswords[j]}" x "${filesarr[i]}" -o${tmp}	
+			for j in "${commonpasswords[@]}"; do
+				echo "j: ${j}"
+				if [ "$(7z -P"${j}" t "${filesarr[i]}")" ]; then
+					echo "success"
+					7z -bso0 -y -P"${j}" x "${filesarr[i]}" -o${tmp}	
 					#echo ${tmp}/*
+				else
+					echo "err"
 				fi
 			done
+
 		else
 			echo "Corrupted Archive, skipping"
 			continue
@@ -89,49 +86,44 @@ for ((i = 0 ; i < ${#filesarr[@]} ; i++));do
 	#echo "path ${tmp}"
 	while [ $conend = false ]
 	do
-		if [ "$(find ${path} -maxdepth 1 -type d -printf 1 | wc -m)" -eq 2 \
-			-a "$(find ${path} -maxdepth 1 ! -type d -printf 1 | wc -m)" -eq 0 ]; then
-			path+="/*"
+		x=($path/*)
+		#echo $x
+		if [ "$(find $x -maxdepth 1 -type d -printf 1 | wc -m)" -eq 2 \
+			-a "$(find $x -maxdepth 1 ! -type d -printf 1 | wc -m)" -eq 0 ]; then
+			for j in "${x[@]}"; do y=$j; done
+			#echo $y
+			path=$y
 			#echo path ${path}
 			# It has only one subdirectory and no other content
 		else
-			#echo ${path}
+			echo "path: ${path}"
 			conend=true
 			#echo "X"
 		fi		
 	done
+	#echo "end"
 	#echo "after" ${path}
 	#passed all empty dirs
 	#keep record of original zip name in text file
 
-	#check whether zip is a steam game
-	
 	foldercontents=(${path}/*)
 	#echo "foldercontents: " "${foldercontents[@]}"
 
-	# if [[ " ${array[*]} " =~ [[:space:]]${value}[[:space:]] ]]; then
-    # # whatever you want to do when array contains value
-	# fi
-
+	#check whether zip is a steam game
 	if [[ "${foldercontents[*]}" =~ "depotcache" ]] && [[ "${foldercontents[*]}" =~ "steamapps" ]]; then
 
 		#its a steam game archive
 		steampath=${path}
 		steampath+="/steamapps/common/"
 		for f in ${steampath}/*; do
-#			echo $f
 			if [ "$f" != "Steamworks Shared" ]; then
 				steampath=${f}
 			fi
 		done
 		#echo ${steampath}
 	fi
-	
-	#echo ${path}
 
-
-
-	if [ $path == $tmp ]; then
+	if [ "$path" == $tmp ]; then
 		#if path is empty that means that folder is already pruned
 		#echo "path empty"
 		#echo "${filesarr[i]}"
@@ -152,9 +144,10 @@ for ((i = 0 ; i < ${#filesarr[@]} ; i++));do
 		fi 	
 
 		tmpsize=${#tmp}
-		fpath=output/${path:tmpsize}
+		fpath=output${path:tmpsize}
 		echo $fpath
 		if [ ! -d "${fpath}" ]; then
+			mkdir "$fpath"
 			mv ${fpath} "$HOME/Downloads/test/testcmd/output"
 		else
 			echo ${fpath} "exists"
@@ -166,11 +159,9 @@ for ((i = 0 ; i < ${#filesarr[@]} ; i++));do
 
 
 	#still have to check for errors
-
+	read name
 done
 
-#exec $cmd
-#dirfiles=`ls`
 
 
 
