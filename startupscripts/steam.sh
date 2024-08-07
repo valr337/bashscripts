@@ -1,2 +1,2 @@
 #!/bin/bash
-steam
+steam -silent & disown
