@@ -21,47 +21,44 @@ do
    # do something with $line here
 done < packages.list
 
+ghlinks=(
+    #owner/repo:greparg
+    'VSCodium/vscodium/:amd64.deb"$'
+    'twpayne/chezmoi:amd64.deb"$'
+    'TheAssassin/AppImageLauncher:bionic_amd64.deb"$'
+    'FreeTubeApp/FreeTube\:64\[\.\]deb'
+    'git-ecosystem/git-credential-manager:gcm-linux_amd64[.]deb'
+    'ilya-zlobintsev/LACT:.ubuntu-2404.deb"$'
+    'trustcrypto/OnlyKey-App:_amd64.deb"$'
+    'peazip/PeaZip:Qt5-1_amd64.deb"$'
+    'Alex313031/Thorium:_AVX.deb"$'
+    'SpacingBat3/WebCord:_amd64.deb"$'
+)
+
 #download github-only packages
 githubdownload(){
-    #install vscodium
-    curl -s https://api.github.com/repos/VSCodium/vscodium/releases | grep browser_download_url | grep 'amd64.deb"$' | head -n 1 | cut -d '"' -f 4
+    for link in ${#ghlinks[@]}
+        do
+        read -r owner greparg < <(awk -F ':' '{print $1,$2}' <<< "$link")
 
-    #install chezmoi
-    curl -s https://api.github.com/repos/twpayne/chezmoi/releases | grep browser_download_url | grep 'amd64.deb"$' | head -n 1 | cut -d '"' -f 4
+        #read api and get latest deb package
+        link=$(curl -s https://api.github.com/repos/"${owner}"/releases | grep browser_download_url | grep "${greparg}" | head -n 1 | cut -d '"' -f 4)
 
-    #install appimagelauncher
-    curl -s https://api.github.com/repos/TheAssassin/AppImageLauncher/releases | grep browser_download_url | grep 'bionic_amd64.deb"$' | head -n 1 | cut -d '"' -f 4
+        wget "${link}"
 
-    #install freetube
-    curl -s https://api.github.com/repos/FreeTubeApp/FreeTube/releases | grep browser_download_url | grep '64[.]deb' | head -n 1 | cut -d '"' -f 4 
-
-    #install gcm
-    curl -s https://api.github.com/repos/git-ecosystem/git-credential-manager/releases | grep browser_download_url | grep 'gcm-linux_amd64[.]deb' | head -n 1 | cut -d '"' -f 4
-
-    #install lact
-    curl -s https://api.github.com/repos/ilya-zlobintsev/LACT/releases | grep browser_download_url | grep '.ubuntu-2404.deb"$' | head -n 1 | cut -d '"' -f 4 
-
-    #install onlykey
-    curl -s https://api.github.com/repos/trustcrypto/OnlyKey-App/releases | grep browser_download_url | grep '_amd64.deb"$' | head -n 1 | cut -d '"' -f 4
-
-    #peazip
-    curl -s https://api.github.com/repos/peazip/PeaZip/releases | grep browser_download_url | grep 'Qt5-1_amd64.deb"$' | head -n 1 | cut -d '"' -f 4
-
-    #install protonvpn
-    wget https://repo.protonvpn.com/debian/dists/stable/main/binary-all/protonvpn-stable-release_1.0.4_all.deb
-
-    #install thorium
-    curl -s https://api.github.com/repos/Alex313031/Thorium/releases | grep browser_download_url | grep '_AVX.deb"$' | head -n 1 | cut -d '"' -f 4 
-
-    #install webcord
-    curl -s https://api.github.com/repos/SpacingBat3/WebCord/releases | grep browser_download_url | grep '_amd64.deb"$' | head -n 1 | cut -d '"' -f 4
-
+        #curl -s https://api.github.com/repos/VSCodium/vscodium/releases | grep browser_download_url | grep 'amd64.deb"$' | head -n 1 | cut -d '"' -f 4
+        
+        #install protonvpn
+        #wget https://repo.protonvpn.com/debian/dists/stable/main/binary-all/protonvpn-stable-release_1.0.4_all.deb
+    done
 }
 githubdownload & wait
 
-for debp in ./*.deb;
-do sudo apt-get install "$debp";
-done;
+for debp in ./*.deb
+    do 
+    echo "$debp"
+    #sudo apt-get install "$debp"
+done
 
 #install docker
 sudo install -m 0755 -d /etc/apt/keyrings
