@@ -51,7 +51,11 @@ githubdownload(){
         #install protonvpn
         #wget https://repo.protonvpn.com/debian/dists/stable/main/binary-all/protonvpn-stable-release_1.0.4_all.deb
     done
+
+    link=$(curl https://repo.protonvpn.com/debian/dists/stable/main/binary-all/ | grep "proton-vpn-gtk-app" | tail -1 | cut -d'"' -f2)
+    wget "https://repo.protonvpn.com/debian/dists/stable/main/binary-all/$link"
 }
+
 githubdownload & wait
 
 for debp in ./*.deb
