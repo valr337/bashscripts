@@ -1,8 +1,21 @@
 #!/bin/bash
+
+echo "starting backup..."
+
+
+if [ -d "$HOME/Downloads/.tmp" ]; then
+    rm -r "$HOME/Downloads/.tmp"
+fi
+mkdir "$HOME/Downloads/.tmp" 
+cd "$HOME/Downloads/.tmp"
+
+#backup packages excluding ones not in ubuntu repo
 \apt list --installed | cut -d'/' -f1 | tail -n +2 > a.txt
 #touch packages.list
 
+
 cd ~/Downloads || exit
+
 
 # Print packages installed from different origins.
 # Exclude standard Ubuntu repositories.
@@ -19,12 +32,13 @@ grep -H '^Origin:' /var/lib/apt/lists/*Release | grep -v ' Ubuntu$' | sort -u \
 
 comm -234 a.txt b.txt removelist.txt > packages.list
 
-#chezmoi
+
+#chezmoi dot files
 pkill -9 freetube
 
 chezmoi apply -y
 
-#backup files
+#backup files desktop
 pkill -9 thorium
 
 backupdir="/media/HDD6TB/Backups/rsyncbackup"
@@ -48,5 +62,7 @@ startbackup(){
     rsync -avzP /home/yx/SyncthingShares $backupdir &
     wait
 }
+
+echo "backup done"
 
 
