@@ -11,7 +11,7 @@ chmod +x ./*.sh
 rm *.sh
 
 #check if not installed, if not then install
-cat packages.list | while read line || [[ -n $line ]];
+while read line || [[ -n $line ]];
 do
     echo $line
     if [ $(dpkg-query -W -f='${Status}' $line 2>/dev/null | grep -c "ok installed") -eq 0 ];
@@ -19,7 +19,7 @@ do
         apt-get install $line;
     fi    
    # do something with $line here
-done
+done < packages.list
 
 #download github-only packages
 githubdownload(){
@@ -57,6 +57,11 @@ githubdownload(){
     curl -s https://api.github.com/repos/SpacingBat3/WebCord/releases | grep browser_download_url | grep '_amd64.deb"$' | head -n 1 | cut -d '"' -f 4
 
 }
+githubdownload & wait
+
+for debp in ./*.deb;
+do sudo apt-get install "$debp";
+done;
 
 #install docker
 sudo install -m 0755 -d /etc/apt/keyrings
