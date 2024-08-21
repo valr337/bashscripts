@@ -1,14 +1,8 @@
 #!/bin/bash
 cd ~/Downloads
 
-dl_removesnap_script(){
-    wget https://gitlab.com/scripts94/kubuntu-get-rid-of-snap/-/blob/main/Kubuntu_get_rid_of_Snap.sh
-}
-dl_removesnap_script & wait
-
-chmod +x ./*.sh
-./*.sh
-rm *.sh
+removesnapscript="./scripts/Kubuntu_get_rid_of_Snap.sh"
+chmod +x "${removesnapscript}"
 
 #check if not installed, if not then install
 while read line || [[ -n $line ]];
@@ -46,12 +40,8 @@ githubdownload(){
 
         wget "${link}"
 
-        #curl -s https://api.github.com/repos/VSCodium/vscodium/releases | grep browser_download_url | grep 'amd64.deb"$' | head -n 1 | cut -d '"' -f 4
-        
-        #install protonvpn
-        #wget https://repo.protonvpn.com/debian/dists/stable/main/binary-all/protonvpn-stable-release_1.0.4_all.deb
     done
-
+    #install protonvpn
     link=$(curl https://repo.protonvpn.com/debian/dists/stable/main/binary-all/ | grep "proton-vpn-gtk-app" | tail -1 | cut -d'"' -f2)
     wget "https://repo.protonvpn.com/debian/dists/stable/main/binary-all/$link"
 }
