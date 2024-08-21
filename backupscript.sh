@@ -20,11 +20,18 @@ grep -H '^Origin:' /var/lib/apt/lists/*Release | grep -v ' Ubuntu$' | sort -u \
     list=${line%%:*}
 
     sed -rn 's/^Package: (.*)$/\1/p' ${list%_*Release}*Packages | sort -u \
-    | xargs -r dpkg -l 2>/dev/null | grep -e '^.i ' | awk '{ print $2 }' >> test.txt
+    | xargs -r dpkg -l 2>/dev/null | grep -e '^.i ' | awk '{ print $2 }' >> b.txt
 
  done
 
-comm -234 a.txt b.txt removelist.txt > packages.list
+#append removelist to diff
+cat ~/Documents/bashscripts/remove.list >> b.txt
+
+#remove duplicates
+sort a.txt | uniq > c.txt
+
+#subtract all unwanted packages 
+grep -Fxvf b.txt c.txt > packages.list
 
 #kill programs that interfere with backup
 pkill -9 freetube
