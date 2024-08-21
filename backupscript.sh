@@ -6,7 +6,7 @@ if [ -d "$HOME/Downloads/.tmp" ]; then
     rm -r "$HOME/Downloads/.tmp"
 fi
 mkdir "$HOME/Downloads/.tmp" 
-cd "$HOME/Downloads/.tmp"
+cd "$HOME/Downloads/.tmp" || exit
 
 #backup packages excluding ones not in ubuntu repo
 \apt list --installed | cut -d'/' -f1 | tail -n +2 > a.txt
@@ -32,6 +32,9 @@ sort a.txt | uniq > c.txt
 
 #subtract all unwanted packages 
 grep -Fxvf b.txt c.txt > packages.list
+
+#cleanup
+rm -r *.txt
 
 #kill programs that interfere with backup
 pkill -9 freetube
